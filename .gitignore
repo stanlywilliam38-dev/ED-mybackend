@@ -1,0 +1,42 @@
+private/*
+uploads/*
+resources/*
+uploads/comments/*
+uploads/*
+.idea/*
+tailwind.css
+dev/*
+.env
+.augmentignore
+api/*
+dispatch/*
+logs/*
+supports/*
+templates/*
+twilio-php/*
+webhooks/*
+Controllers/tenant_twilio_service.php
+Controllers/api/sms_error.log
+envs
+
+error_log
+test.sql
+test*.json
+node_modules
+frontend/node_modules
+EducationSite/mybackend/node_modules
+frontend/.umi*
+# umi
+frontend/.umi
+frontend/.umi-production
+frontend/.umi-test
+
+# dependencies
+**/node_modules
+.vscode
+.claude
+v2
+assets
+
+# Composer vendor directory
+Lib/vendor/

@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Shop",
+  "main": "serve.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel": "^6.23.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "ejs": "^2.7.4",
+    "express": "^5.0.0-alpha.1",
+    "express-flash": "0.0.2",
+    "express-session": "^1.17.1",
+    "fs": "0.0.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.5.6",
+    "mongoose": "^5.7.7",
+    "multiparty": "^4.2.1",
+    "nodemon": "^2.0.3",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
+    "process": "^0.11.10",
+    "validator": "^1.0.8"
+  }
+}
