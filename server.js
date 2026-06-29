@@ -50,7 +50,7 @@ app.use('/api', routes);
 
 
 try {
-  mongoose.connect(DB_URL + DB_NAME, {
+  mongoose.connect(process.env.MONGO_URL || (DB_URL + DB_NAME), {
     useNewUrlParser: true,
     useUnifiedTopology: true
   });
