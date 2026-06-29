@@ -44,11 +44,11 @@ app.use(bodyParser.json());
 // Passport middleware
 app.use(passport.initialize());
 
-// /api/*에 관한 routes를 돌려준다.
+
 const routes = require('./src/router');
 app.use('/api', routes);
 
-//MongoDB와의 접속을 진행한다.
+
 try {
   mongoose.connect(DB_URL + DB_NAME, {
     useNewUrlParser: true,
@@ -62,7 +62,7 @@ const chatServer = require('./lib/chat_server');
 const server = require('http').createServer(app);
 chatServer.listen(server);
 
-const Port = PORT; //PORT 설정
+const Port = PORT; 
 server.listen(Port, () => {
     console.log(`Server is running on port ${Port}`)
 })
