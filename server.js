@@ -43,6 +43,9 @@ app.use("/api", routes);
 const mongoUrl = process.env.MONGO_URL || `${DB_URL}${DB_NAME}`;
 
 console.log("Mongo URL exists:", !!process.env.MONGO_URL);
+console.log("Mongo URL starts with:", process.env.MONGO_URL?.slice(0, 14));
+console.log("Mongo URL is Atlas SRV:", process.env.MONGO_URL?.startsWith("mongodb+srv://"));
+console.log("Mongo URL host OK:", process.env.MONGO_URL?.includes("cluster0.tgki36d.mongodb.net"));
 
 mongoose
   .connect(mongoUrl)
