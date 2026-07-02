@@ -11,8 +11,7 @@ const { DB_URL, DB_NAME, PORT } = CONST;
 
 // CORS fix
 const allowedOrigins = [
-  "https://ed-frontend-lst3.vercel.app",
-  "https://ed-frontend-s8t4.vercel.app",
+  "https://ed-frontend-elmy.vercel.app",
   "http://localhost:3000",
 ];
 
