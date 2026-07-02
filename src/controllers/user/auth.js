@@ -11,57 +11,90 @@ const { getUser } = require('../../repository/user.repository');
 const { FRONTEND_PROEJCT_NAME } = require('../../config/const');
 
 exports.register = (req, res) => {
-    let errors = {};
-    const newUploadDir = __dirname + "/.." + uploadDir;
-    const form = new multiparty.Form({}, { uploadDir: newUploadDir });
+  let errors = {};
 
-    form.parse(req, (err, fields, files) => {
-        console.log("----FILES----", files);
-        console.log('----REQ DATA---', fields);
+  const uploadPath = path.join(process.cwd(), "public", "img", "uploads");
 
-        if (files) {
-            User.findOne({ email: fields.email[0] })
-                .then((user) => {
-                    if (user) {
-                        errors.email = 'Email already exists';
-                        return res.status(400).json(errors);
-                    } else {
-                        const newUser = new User({
-                            name: fields.name[0],
-                            email: fields.email[0],
-                            password: fields.password[0],
-                            type: fields.type[0],
-                            role: 1,
-                            avatar_extension: files.files[0].originalFilename.split(".")[1],
-                            birthday: fields.birthday[0],
-                            gender: fields.gender[0]
-                        });
-                        bcrypt.genSalt(10, (err, salt) => {
-                            bcrypt.hash(newUser.password, salt, (err, hash) => {
-                                newUser.password = hash;
-                                newUser.save()
-                                    .then(async (user) => {
-                                        files.files.map((file) => {
-                                            const uploadedFile = file;
-                                            newFileName = user._id;
-                                            const file_extension = file.originalFilename.split(".")[1];
-                                            const newFilePath =  `../${FRONTEND_PROEJCT_NAME}/public/assets/img/${user._id}.${file_extension}`;
-                                            fs.copyFile(uploadedFile.path, newFilePath, function (err) {
-                                                if (err) {
-                                                    return res.json(err);
-                                                }
-                                            })
-                                        })
-                                        res.json(user);
-                                    })
-                                    .catch(err => console.log(err))
-                            });
-                        });
-                    }
-                })
-        }
-    })
-}
+  if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  }
+
+  const form = new multiparty.Form({ uploadDir: uploadPath });
+
+  form.parse(req, async (err, fields, files) => {
+    try {
+      if (err) {
+        console.error("Form parse error:", err);
+        return res.status(400).json({ message: "Invalid form data" });
+      }
+
+      const email = fields.email && fields.email[0];
+      const name = fields.name && fields.name[0];
+      const password = fields.password && fields.password[0];
+      const type = fields.type && fields.type[0];
+      const birthday = fields.birthday && fields.birthday[0];
+      const gender = fields.gender && fields.gender[0];
+
+      if (!email || !name || !password || !type) {
+        return res.status(400).json({
+          message: "Missing required fields",
+        });
+      }
+
+      const existingUser = await User.findOne({ email });
+
+      if (existingUser) {
+        errors.email = "Email already exists";
+        return res.status(400).json(errors);
+      }
+
+      const uploadedFile =
+        files && files.files && files.files.length > 0
+          ? files.files[0]
+          : null;
+
+      let avatar_extension = "";
+
+      if (uploadedFile && uploadedFile.originalFilename) {
+        avatar_extension = uploadedFile.originalFilename.split(".").pop();
+      }
+
+      const newUser = new User({
+        name,
+        email,
+        password,
+        type,
+        role: 1,
+        avatar_extension,
+        birthday,
+        gender,
+      });
+
+      const salt = await bcrypt.genSalt(10);
+      newUser.password = await bcrypt.hash(newUser.password, salt);
+
+      const savedUser = await newUser.save();
+
+      if (uploadedFile && avatar_extension) {
+        const newFilePath = path.join(
+          uploadPath,
+          `${savedUser._id}.${avatar_extension}`
+        );
+
+        fs.copyFileSync(uploadedFile.path, newFilePath);
+      }
+
+      return res.json(savedUser);
+    } catch (error) {
+      console.error("Register error:", error);
+
+      return res.status(500).json({
+        message: "Register failed",
+        error: error.message,
+      });
+    }
+  });
+};
 
 exports.login = async (req, res) => {
     let errors = {};
