@@ -133,6 +133,9 @@ exports.sendOrder = async(data, socket, io, users) => {
 exports.getUserAdviceMessages = async (data, socket, io, users) => {
     const sender_email = data.email;
     const admin = await User.findOne({ role: 2 });
+    if (!admin){
+        return socket.emit('get_user_advice_messages',[]);
+    }
     const receiver_email = admin['email'];
     const messages_sender = await Advice.find({
         receiver_email, sender_email
@@ -140,7 +143,7 @@ exports.getUserAdviceMessages = async (data, socket, io, users) => {
     const messages_receiver = await Advice.find({
         receiver_email: sender_email, sender_email: receiver_email
     });
-    messages = messages_sender.concat(messages_receiver);
+    const messages = messages_sender.concat(messages_receiver);
     socket.emit('get_user_advice_messages', messages);
 }
 
