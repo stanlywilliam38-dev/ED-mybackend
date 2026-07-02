@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const app = express();
 
 const passport = require("passport");
@@ -7,6 +8,34 @@ const bodyParser = require("body-parser");
 
 const CONST = require("./src/config/const");
 const { DB_URL, DB_NAME, PORT } = CONST;
+
+// CORS fix
+const allowedOrigins = [
+  "https://ed-frontend-lst3.vercel.app",
+  "https://ed-frontend-s8t4.vercel.app",
+  "http://localhost:3000",
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+// Body parser
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// Passport Config
+require("./src/config/passport")(passport);
+app.use(passport.initialize());
 
 // routes
 app.get("/", (req, res) => {
@@ -29,23 +58,11 @@ app.get("/public/:name", (req, res) => {
   });
 });
 
-// Passport Config
-require("./src/config/passport")(passport);
-
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(passport.initialize());
-
 const routes = require("./src/router");
 app.use("/api", routes);
 
 // MongoDB connection
 const mongoUrl = process.env.MONGO_URL || `${DB_URL}${DB_NAME}`;
-
-console.log("Mongo URL exists:", !!process.env.MONGO_URL);
-console.log("Mongo URL starts with:", process.env.MONGO_URL?.slice(0, 14));
-console.log("Mongo URL is Atlas SRV:", process.env.MONGO_URL?.startsWith("mongodb+srv://"));
-console.log("Mongo URL host OK:", process.env.MONGO_URL?.includes("cluster0.tgki36d.mongodb.net"));
 
 mongoose
   .connect(mongoUrl)
@@ -59,6 +76,7 @@ mongoose
 
 const chatServer = require("./lib/chat_server");
 const server = require("http").createServer(app);
+
 chatServer.listen(server);
 
 // Railway needs process.env.PORT
