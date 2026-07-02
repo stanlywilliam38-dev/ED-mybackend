@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const keys = require('../../../config/keys');
 const fs = require("fs");
+const path = require("path");
 const multiparty = require('multiparty');
 const User = require('../../models/User');
 const uploadDir = require('../../../config/keys').uploadDir;
