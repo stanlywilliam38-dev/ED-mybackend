@@ -1,13 +1,23 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const path = require("path");
+const fs = require("fs");
 const cors = require("cors");
-const app = express();
-
 const passport = require("passport");
 const bodyParser = require("body-parser");
 
+const app = express();
+
 const CONST = require("./src/config/const");
 const { DB_URL, DB_NAME, PORT } = CONST;
+
+// Upload folder path
+const uploadPath = path.join(process.cwd(), "public", "img", "uploads");
+
+// Make sure upload folder exists
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
 
 // CORS fix
 const allowedOrigins = [
@@ -32,31 +42,22 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// Static image routes
+app.use("/uploads", express.static(uploadPath));
+
+// Optional: keep old route support
+app.use("/public", express.static(uploadPath));
+
 // Passport Config
 require("./src/config/passport")(passport);
 app.use(passport.initialize());
 
-// routes
+// Test route
 app.get("/", (req, res) => {
   res.json({ name: "john" });
 });
 
-app.get("/public/:name", (req, res) => {
-  const options = {
-    root: __dirname + "/public/img/uploads",
-  };
-
-  const fileName = req.params.name;
-
-  res.sendFile(fileName, options, function (err) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("Sent:", fileName);
-    }
-  });
-});
-
+// API routes
 const routes = require("./src/router");
 app.use("/api", routes);
 
@@ -73,6 +74,7 @@ mongoose
     console.error(err);
   });
 
+// Chat server
 const chatServer = require("./lib/chat_server");
 const server = require("http").createServer(app);
 

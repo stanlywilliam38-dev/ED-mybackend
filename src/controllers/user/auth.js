@@ -20,23 +20,30 @@ exports.register = (req, res) => {
     fs.mkdirSync(uploadPath, { recursive: true });
   }
 
-  const form = new multiparty.Form({ uploadDir: uploadPath });
+  const form = new multiparty.Form({
+    uploadDir: uploadPath,
+  });
 
   form.parse(req, async (err, fields, files) => {
     try {
       if (err) {
         console.error("Form parse error:", err);
-        return res.status(400).json({ message: "Invalid form data" });
+        return res.status(400).json({
+          message: "Invalid form data",
+        });
       }
 
-      const email = fields.email && fields.email[0];
-      const name = fields.name && fields.name[0];
-      const password = fields.password && fields.password[0];
-      const type = fields.type && fields.type[0];
-      const birthday = fields.birthday && fields.birthday[0];
-      const gender = fields.gender && fields.gender[0];
+      console.log("----FILES----", files);
+      console.log("----REQ DATA----", fields);
 
-      if (!email || !name || !password || !type) {
+      const name = fields.name?.[0];
+      const email = fields.email?.[0];
+      const password = fields.password?.[0];
+      const type = fields.type?.[0];
+      const birthday = fields.birthday?.[0];
+      const gender = fields.gender?.[0];
+
+      if (!name || !email || !password || !type) {
         return res.status(400).json({
           message: "Missing required fields",
         });
@@ -49,10 +56,8 @@ exports.register = (req, res) => {
         return res.status(400).json(errors);
       }
 
-      const uploadedFile =
-        files && files.files && files.files.length > 0
-          ? files.files[0]
-          : null;
+      const allFiles = Object.values(files || {}).flat();
+      const uploadedFile = allFiles.length > 0 ? allFiles[0] : null;
 
       let avatar_extension = "";
 
@@ -77,12 +82,12 @@ exports.register = (req, res) => {
       const savedUser = await newUser.save();
 
       if (uploadedFile && avatar_extension) {
-        const newFilePath = path.join(
+        const finalImagePath = path.join(
           uploadPath,
           `${savedUser._id}.${avatar_extension}`
         );
 
-        fs.copyFileSync(uploadedFile.path, newFilePath);
+        fs.renameSync(uploadedFile.path, finalImagePath);
       }
 
       return res.json(savedUser);
