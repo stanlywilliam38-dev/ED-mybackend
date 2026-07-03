@@ -21,22 +21,27 @@ if (!fs.existsSync(uploadPath)) {
 
 // CORS fix
 const allowedOrigins = [
+  "https://goal-mindset.vercel.app",
   "https://ed-frontend-elmy.vercel.app",
   "http://localhost:3000",
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("Blocked by CORS:", origin);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 // Body parser
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -45,7 +50,7 @@ app.use(bodyParser.json());
 // Static image routes
 app.use("/uploads", express.static(uploadPath));
 
-// Optional: keep old route support
+// Optional old support
 app.use("/public", express.static(uploadPath));
 
 // Passport Config
