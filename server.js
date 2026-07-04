@@ -43,9 +43,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
 
-// Body parser
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+// Body parser (raised limit to allow base64-encoded avatar uploads)
+app.use(bodyParser.urlencoded({ extended: false, limit: "10mb" }));
+app.use(bodyParser.json({ limit: "10mb" }));
 
 // Static image routes
 app.use("/uploads", express.static(uploadPath));
