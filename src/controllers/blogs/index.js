@@ -1,9 +1,9 @@
 const Blogs = require('../../models/Blogs');
 const User = require('../../models/User');
-const multiparty = require('multiparty');
 const fs = require('fs');
 const { FRONTEND_PROEJCT_NAME } = require('../../config/const');
-const uploadDir = require('../../../config/keys').uploadDir;
+
+const ALLOWED_BLOG_IMAGE_MIME_TO_EXT = { jpeg: "jpg", jpg: "jpg", png: "png", gif: "gif", webp: "webp" };
 
 exports.getBlogs = async function (req, res) {
 	const result = await Blogs.find({ parent_email: "" });
@@ -19,46 +19,48 @@ exports.getBlogComments = async function (req, res) {
 
 exports.postBlog = async function (req, res) {
 
-	const newUploadDir = __dirname + "/.." + uploadDir;
-	const form = new multiparty.Form({}, { uploadDir: newUploadDir });
-	form.parse(req, (err, fields, files) => {
-		if (files) {
-			const newBlog = new Blogs({
-				email: fields.email[0],
-				title: fields.title[0],
-				content: fields.content[0],
-				image_extension: files.files[0].originalFilename.split(".")[1],
-				parent_email: ""
+	const { email, title, content, image } = req.body;
+
+	let image_extension;
+	let imageBuffer;
+
+	if (typeof image === "string") {
+		const match = image.match(/^data:image\/(\w+);base64,(.+)$/);
+		const extension = match && ALLOWED_BLOG_IMAGE_MIME_TO_EXT[match[1].toLowerCase()];
+
+		if (match && extension) {
+			image_extension = extension;
+			imageBuffer = Buffer.from(match[2], "base64");
+		}
+	}
+
+	const newBlog = new Blogs({
+		email,
+		title,
+		content,
+		image_extension,
+		parent_email: ""
+	});
+
+	newBlog.save()
+		.then((blog) => {
+			if (imageBuffer) {
+				const uploadDir = __dirname + `/../../../../${FRONTEND_PROEJCT_NAME}/public/assets/img/blogs`;
+				if (!fs.existsSync(uploadDir)) {
+					fs.mkdirSync(uploadDir, { recursive: true });
+				}
+				fs.writeFileSync(`${uploadDir}/${blog._id}.${image_extension}`, imageBuffer);
+			}
+			res.json({
+				result: "success"
 			});
-			newBlog.save()
-				.then((blog) => {
-					files.files.map((file) => {
-						const uploadedFile = file;
-						newFileName = blog._id;
-						const file_extension = file.originalFilename.split(".")[1];
-						const newFilePath = `../${FRONTEND_PROEJCT_NAME}/public/assets/img/blogs/${blog._id}.${file_extension}`;
-						fs.copyFile(uploadedFile.path, newFilePath, function (err) {
-							if (err) {
-								return res.json(err);
-							}
-						})
-					})
-					res.json({
-						result: "success"
-					});
-				})
-				.catch(err => {
-					console.log(err);
-					res.json({
-						result: "fail"
-					});
-				})
-		} else {
+		})
+		.catch(err => {
+			console.log(err);
 			res.json({
 				result: "fail"
-			})
-		}
-	})
+			});
+		})
 }
 
 exports.postComment = async function (req, res) {
